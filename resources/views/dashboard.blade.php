@@ -3,7 +3,7 @@
     <div class="container-fluid mt-4">
         <div class="row">
             <div class="col-lg-8 m-auto border rounded shadow p-3">
-
+                <a href="{{ route('members.create') }}" class="btn btn-success mb-2 float-right">Add Member</a>
                 <table class="table mx-auto">
                     <thead class="thead-dark">
                         <tr>

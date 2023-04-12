@@ -7,11 +7,12 @@
                     <div class="row justify-content-center border rounded shadow p-3">
                         <div class="col-md-6">
                             <h1>{{ $member->name }}</h1>
-                            <p>Number of Wins: {{ $wins }}</p>
-                            <p>Number of Losses: {{ $losses }}</p>
-                            <p>Average Score: {{ $avg_score }}</p>
-                            <p>Highest Score: {{ $highest_score }} ({{ $highest_score_date }}) against
-                                {{ $highest_score_opponent }}</p>
+                            <p>Number of Wins: {{ $member_detail['wins'] }}</p>
+                            <p>Number of Losses: {{ $member_detail['losses'] }}</p>
+                            <p>Average Score: {{ $member_detail['avg_score'] }}</p>
+                            <p>Highest Score: {{ $member_detail['highest_score'] }}
+                                ({{ $member_detail['highest_score_date'] }}) against
+                                {{ $member_detail['highest_score_opponent'] }}</p>
                         </div>
                     </div>
                 </div>

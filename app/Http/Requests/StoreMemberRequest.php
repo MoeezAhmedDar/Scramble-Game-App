@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class MemberRequest extends FormRequest
+class StoreMemberRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,8 +25,9 @@ class MemberRequest extends FormRequest
     {
         return [
             'name' => 'required',
-            'email' => 'required|email',
-            'contact_number' => 'required'
+            'email' => 'required|email|unique:members,email',
+            'contact_number' => 'required|regex:/^([0-9\s\-\+\(\)]*)$/|min:11|max:14',
+            'date_joined' => 'required'
         ];
     }
 }

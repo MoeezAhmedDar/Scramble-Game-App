@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\Game;
+use App\Models\Member;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -18,9 +20,8 @@ class ScrabbleSeeder extends Seeder
     {
         $faker = Faker::create();
 
-        // Create 50 members
         for ($i = 0; $i < 50; $i++) {
-            DB::table('members')->insert([
+            Member::create([
                 'name' => $faker->name,
                 'email' => $faker->email,
                 'contact_number' => $faker->phoneNumber,
@@ -30,17 +31,13 @@ class ScrabbleSeeder extends Seeder
             ]);
         }
 
-        // Create 1000 games
         for ($i = 0; $i < 1000; $i++) {
-            // Select two random players
-            $players = DB::table('members')->inRandomOrder()->limit(2)->get();
+            $players = Member::inRandomOrder()->limit(2)->get();
 
-            // Generate random scores
             $player1_score = $faker->numberBetween(200, 500);
             $player2_score = $faker->numberBetween(200, 500);
 
-            // Insert game record
-            DB::table('games')->insert([
+            Game::create([
                 'player1_id' => $players[0]->id,
                 'player2_id' => $players[1]->id,
                 'player1_score' => $player1_score,

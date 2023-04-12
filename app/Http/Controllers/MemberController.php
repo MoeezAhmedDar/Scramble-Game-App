@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\MemberRequest;
+use App\Http\Requests\EditMemberRequest;
+use App\Http\Requests\StoreMemberRequest;
+use App\Interfaces\MemberRepositoryInterface;
 use App\Models\Game;
 use App\Models\Member;
 use Illuminate\Http\Request;
@@ -10,6 +12,13 @@ use Illuminate\Support\Facades\DB;
 
 class MemberController extends Controller
 {
+    private MemberRepositoryInterface $memberRepository;
+
+    public function __construct(MemberRepositoryInterface $memberRepository)
+    {
+        $this->memberRepository = $memberRepository;
+    }
+
     public function index()
     {
         $members = Member::paginate(10);
@@ -19,58 +28,30 @@ class MemberController extends Controller
 
     public function create()
     {
-        //
+        return view('members.create');
     }
 
-    public function store(Request $request)
+    public function store(StoreMemberRequest $request)
     {
-        //
+        try {
+            Member::create($request->only('name', 'email', 'contact_number', 'date_joined'));
+            $messages['success'] = "Member Created Successfully";
+
+            return redirect()
+                ->route('members.index')
+                ->with('messages', $messages);
+        } catch (\Exception $e) {
+            return $this->errorMessage($e->getMessage());
+        }
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\Member  $member
-     * @return \Illuminate\Http\Response
-     */
     public function show(Member $member)
     {
-        $id = $member->id;
-        $member = Member::where('id', $id)->first();
-
-        $wins = Game::where(function ($query) use ($id) {
-            $query->where('player1_id', $id)->where('player1_score', '>', DB::raw('player2_score'));
-        })->orWhere(function ($query) use ($id) {
-            $query->where('player2_id', $id)->where('player2_score', '>', DB::raw('player1_score'));
-        })->count();
-
-        $losses = Game::where(function ($query) use ($id) {
-            $query->where('player1_id', $id)->where('player1_score', '<', DB::raw('player2_score'));
-        })->orWhere(function ($query) use ($id) {
-            $query->where('player2_id', $id)->where('player2_score', '<', DB::raw('player1_score'));
-        })->count();
-
-        $avg_score = Game::where('player1_id', $id)->orWhere('player2_id', $id)->avg(DB::raw('(CASE WHEN player1_id = ' . $id . ' THEN player1_score ELSE player2_score END)'));
-
-        $highest_score = Game::join('members as m1', 'games.player1_id', '=', 'm1.id')
-            ->join('members as m2', 'games.player2_id', '=', 'm2.id')
-            ->select('games.*', DB::raw('CASE WHEN player1_id = ' . $id . ' THEN player1_score ELSE player2_score END as score'), 'm2.name as opponent_name')
-            ->where(function ($query) use ($id) {
-                $query->where('player1_id', $id)->orWhere('player2_id', $id);
-            })->orderBy('score', 'desc')->first();
-        $game = Game::where('player1_id', $id)->orWhere('player2_id', $id)->orderBy(DB::raw('CASE WHEN player1_id = ' . $id . ' THEN player1_score ELSE player2_score END'), 'DESC')->first();
-        $highest_score = $game ? ($game->player1_id == $id ? $game->player1_score : $game->player2_score) : null;
-        $highest_score_date = $game ? $game->game_date->format('Y-m-d') : null;
-        $highest_score_opponent = $game ? ($game->player1_id == $id ? $game->player2->name : $game->player1->name) : null;
+        $member_detail = $this->memberRepository->getMemberDetail($member);
 
         return view('members.show', [
             'member' => $member,
-            'wins' => $wins,
-            'losses' => $losses,
-            'avg_score' => $avg_score,
-            'highest_score' => $highest_score,
-            'highest_score_date' => $highest_score_date,
-            'highest_score_opponent' => $highest_score_opponent,
+            'member_detail' => $member_detail
         ]);
     }
 
@@ -79,7 +60,7 @@ class MemberController extends Controller
         return view('members.edit', compact('member'));
     }
 
-    public function update(MemberRequest $request, Member $member)
+    public function update(EditMemberRequest $request, Member $member)
     {
         try {
             $member->update([
@@ -92,15 +73,7 @@ class MemberController extends Controller
                 ->route('dashboard')
                 ->with('messages', $messages);
         } catch (\Exception $e) {
-            $messages['danger'] = $e->getMessage();
-            return redirect()
-                ->back()
-                ->with('messages', $messages);
+            return $this->errorMessage($e->getMessage());
         }
-    }
-
-    public function destroy(Member $member)
-    {
-        //
     }
 }
